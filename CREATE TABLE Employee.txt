@@ -1,0 +1,233 @@
+CREATE TABLE Employee
+(
+    SSN VARCHAR(10),
+    Fname VARCHAR(20),
+    Lname VARCHAR(20),
+    Address VARCHAR(30),
+    Gender CHAR(1),
+    Salary INT,
+    Super_ssn VARCHAR(10),
+    Dno INT,
+    PRIMARY KEY (SSN),
+    FOREIGN KEY (Super_ssn) REFERENCES Employee(SSN)
+);
+
+CREATE TABLE Department
+(
+    Dno INT,
+    Dname VARCHAR(20),
+    Mgr_ssn VARCHAR(10),
+    Mgr_start_date DATE,
+    PRIMARY KEY (Dno),
+    FOREIGN KEY (Mgr_ssn) REFERENCES Employee(SSN)
+);
+
+ALTER TABLE Employee
+ADD CONSTRAINT FK_Department
+FOREIGN KEY (Dno)
+REFERENCES Department(Dno);
+
+CREATE TABLE D_L
+(
+    Dno INT,
+    Dlocation VARCHAR(20),
+    PRIMARY KEY (Dno, Dlocation),
+    FOREIGN KEY (Dno) REFERENCES Department(Dno)
+);
+
+CREATE TABLE Project
+(
+    Pno INT,
+    Pname VARCHAR(20),
+    PLocation VARCHAR(20),
+    Dno INT,
+    PRIMARY KEY (Pno),
+    FOREIGN KEY (Dno) REFERENCES Department(Dno)
+);
+CREATE TABLE Works_On
+(
+    Ssn VARCHAR(10),
+    Pno INT,
+    Hours INT,
+    PRIMARY KEY (Ssn, Pno),
+    FOREIGN KEY (Ssn) REFERENCES Employee(Ssn),
+    FOREIGN KEY (Pno) REFERENCES Project(Pno)
+);
+
+INSERT INTO Employee
+VALUES ('1001','John','Scott','Bangalore','M',450000,'1005',5);
+
+INSERT INTO Employee
+VALUES ('1002','Alice','Brown','Mysore','F',480000,'1005',5);
+
+INSERT INTO Employee
+VALUES ('1003','David','Lee','Chennai','M',620000,'1006',3);
+
+INSERT INTO Employee
+VALUES ('1004','Maria','Scott','Delhi','F',510000,'1006',3);
+
+INSERT INTO Employee
+VALUES ('1005','Robert','King','Bangalore','M',720000,NULL,5);
+
+INSERT INTO Employee
+VALUES ('1006','Linda','Roy','Mumbai','F',800000,NULL,1);
+
+INSERT INTO Employee
+VALUES ('1007','Rahul','Sharma','Pune','M',390000,'1005',5);
+
+INSERT INTO Employee
+VALUES ('1008','Sneha','Patel','Ahmedabad','F',530000,'1005',5);
+
+INSERT INTO Employee
+VALUES ('1009','Arjun','Mehta','Hyderabad','M',470000,'1005',5);
+
+INSERT INTO Employee
+VALUES ('1010','Priya','Nair','Kochi','F',410000,'1006',1);
+
+
+INSERT INTO Department
+VALUES (1,'Research','1006','2020-01-10');
+
+INSERT INTO Department
+VALUES (3,'Sales','1003','2021-03-15');
+
+INSERT INTO Department
+VALUES (5,'Accounts','1005','2019-06-01');
+
+
+
+INSERT INTO D_L VALUES (1,'Mumbai');
+INSERT INTO D_L VALUES (1,'Delhi');
+
+INSERT INTO D_L VALUES (3,'Chennai');
+INSERT INTO D_L VALUES (3,'Hyderabad');
+
+INSERT INTO D_L VALUES (5,'Bangalore');
+INSERT INTO D_L VALUES (5,'Mysore');
+
+
+
+INSERT INTO Project
+VALUES (101,'IOT','Bangalore',5);
+
+INSERT INTO Project
+VALUES (102,'AI_System','Chennai',3);
+
+INSERT INTO Project
+VALUES (103,'Banking_App','Bangalore',5);
+
+INSERT INTO Project
+VALUES (104,'Cloud_Project','Mumbai',1);
+
+INSERT INTO Project
+VALUES (105,'Data_Analytics','Hyderabad',3);
+
+INSERT INTO Project
+VALUES (106,'Smart_City','Delhi',1);
+
+
+
+INSERT INTO Works_On VALUES ('1001',101,15);
+INSERT INTO Works_On VALUES ('1002',101,10);
+INSERT INTO Works_On VALUES ('1007',103,12);
+INSERT INTO Works_On VALUES ('1003',102,20);
+INSERT INTO Works_On VALUES ('1004',102,15);
+INSERT INTO Works_On VALUES ('1005',103,5);
+INSERT INTO Works_On VALUES ('1001',103,8);
+INSERT INTO Works_On VALUES ('1006',104,10);
+INSERT INTO Works_On VALUES ('1008',101,12);
+INSERT INTO Works_On VALUES ('1009',103,18);
+INSERT INTO Works_On VALUES ('1003',105,10);
+INSERT INTO Works_On VALUES ('1010',106,14);
+INSERT INTO Works_On VALUES ('1006',106,9);
+INSERT INTO Works_On VALUES ('1002',103,11);
+INSERT INTO Works_On VALUES ('1004',105,7);
+
+ query1
+
+SELECT P.Pno
+FROM Project P
+JOIN Department D
+ON P.Dno = D.Dno
+JOIN Employee E
+ON D.Mgr_ssn = E.SSN
+WHERE E.Lname = 'Scott'
+
+UNION
+
+SELECT P.Pno
+FROM Project P
+JOIN Works_On W
+ON P.Pno = W.Pno
+JOIN Employee E
+ON W.Ssn = E.SSN
+WHERE E.Lname = 'Scott';
+
+
+query 2
+
+SELECT E.Fname,
+       E.Lname,
+       E.Salary * 1.10 AS Incr_Salary
+FROM Employee E
+JOIN Works_On W
+ON E.SSN = W.Ssn
+JOIN Project P
+ON W.Pno = P.Pno
+WHERE P.Pname = 'IOT';
+
+quey 3
+
+SELECT
+    SUM(E.Salary) AS Total_Salary,
+    MAX(E.Salary) AS Max_Salary,
+    MIN(E.Salary) AS Min_Salary,
+    AVG(E.Salary) AS Average_Salary
+FROM Employee E
+JOIN Department D
+ON E.Dno = D.Dno
+WHERE D.Dname = 'Accounts';
+
+
+
+query4
+SELECT E.Fname,
+       E.Lname
+FROM Employee E
+WHERE NOT EXISTS
+(
+    SELECT *
+    FROM Project P
+    WHERE P.Dno = 5
+    AND NOT EXISTS
+    (
+        SELECT *
+        FROM Works_On W
+        WHERE W.Ssn = E.SSN
+        AND W.Pno = P.Pno
+    )
+);
+
+
+query5
+
+SELECT D.Dno,
+       COUNT(*) AS Employee_Count
+FROM Department D
+JOIN Employee E
+ON D.Dno = E.Dno
+WHERE E.Salary > 600000
+AND D.Dno IN
+(
+    SELECT Dno
+    FROM Employee
+    GROUP BY Dno
+    HAVING COUNT(*) > 5
+)
+GROUP BY D.Dno;
+
+
+
+
+
+

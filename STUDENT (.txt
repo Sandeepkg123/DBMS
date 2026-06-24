@@ -1,0 +1,202 @@
+CREATE TABLE STUDENT (
+    USN      VARCHAR2(20) PRIMARY KEY,
+    SNAME    VARCHAR2(30),
+    ADDRESS  VARCHAR2(50),
+    PHONE    VARCHAR2(15),
+    GENDER   VARCHAR2(10)
+);
+
+CREATE TABLE SEMSEC (
+    SSID  VARCHAR2(10) PRIMARY KEY,
+    SEM   NUMBER,
+    SEC   VARCHAR2(5)
+);
+
+CREATE TABLE CLASS (
+    USN   VARCHAR2(20),
+    SSID  VARCHAR2(10),
+
+    PRIMARY KEY (USN, SSID),
+
+    FOREIGN KEY (USN)
+        REFERENCES STUDENT(USN)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (SSID)
+        REFERENCES SEMSEC(SSID)
+        ON DELETE CASCADE
+);
+
+CREATE TABLE COURSE (
+    SUBCODE  VARCHAR2(10) PRIMARY KEY,
+    TITLE    VARCHAR2(30),
+    SEM      NUMBER,
+    CREDITS  NUMBER
+);
+
+CREATE TABLE IAMARKS (
+    USN       VARCHAR2(20),
+    SUBCODE   VARCHAR2(10),
+    SSID      VARCHAR2(10),
+    TEST1     NUMBER,
+    TEST2     NUMBER,
+    TEST3     NUMBER,
+    FINALIA   NUMBER,
+
+    PRIMARY KEY (USN, SUBCODE, SSID),
+
+    FOREIGN KEY (USN)
+        REFERENCES STUDENT(USN)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (SUBCODE)
+        REFERENCES COURSE(SUBCODE)
+        ON DELETE CASCADE,
+
+    FOREIGN KEY (SSID)
+        REFERENCES SEMSEC(SSID)
+        ON DELETE CASCADE
+);
+
+INSERT INTO STUDENT VALUES ('1B24CS101','Rahul','Bangalore','9876543210','M');
+INSERT INTO STUDENT VALUES ('1B24CS102','Sneha','Mysore','9876543211','F');
+INSERT INTO STUDENT VALUES ('1B24CS103','Arjun','Tumkur','9876543212','M');
+INSERT INTO STUDENT VALUES ('1B24CS104','Pooja','Hassan','9876543213','F');
+INSERT INTO STUDENT VALUES ('1B24CS112','Rakesh','Bangalore','9876543222','M');
+
+INSERT INTO SEMSEC VALUES ('CSE4C',4,'C');
+INSERT INTO SEMSEC VALUES ('CSE8A',8,'A');
+INSERT INTO SEMSEC VALUES ('CSE8B',8,'B');
+INSERT INTO SEMSEC VALUES ('CSE8C',8,'C');
+INSERT INTO SEMSEC VALUES ('CSE6A',6,'A');
+
+INSERT INTO CLASS VALUES ('1B24CS101','CSE4C');
+INSERT INTO CLASS VALUES ('1B24CS102','CSE4C');
+INSERT INTO CLASS VALUES ('1B24CS103','CSE8A');
+INSERT INTO CLASS VALUES ('1B24CS104','CSE8B');
+INSERT INTO CLASS VALUES ('1B24CS112','CSE8C');
+
+INSERT INTO COURSE VALUES ('21CS41','DBMS',4,4);
+INSERT INTO COURSE VALUES ('21CS42','ADA',4,4);
+INSERT INTO COURSE VALUES ('21CS81','AI',8,3);
+INSERT INTO COURSE VALUES ('21CS82','ML',8,4);
+INSERT INTO COURSE VALUES ('21CS61','CN',6,4);
+
+
+INSERT INTO IAMARKS VALUES ('1B24CS101','21CS41','CSE4C',18,16,19,NULL);
+INSERT INTO IAMARKS VALUES ('1B24CS102','21CS42','CSE4C',15,17,18,NULL);
+INSERT INTO IAMARKS VALUES ('1B24CS103','21CS81','CSE8A',19,20,18,NULL);
+INSERT INTO IAMARKS VALUES ('1B24CS104','21CS82','CSE8B',14,15,16,NULL);
+INSERT INTO IAMARKS VALUES ('1B24CS112','21CS82','CSE8C',18,17,19,NULL);
+
+
+QUERY 1
+
+SELECT s.*, ss.SEM, ss.SEC
+FROM STUDENT s, SEMSEC ss, CLASS c
+WHERE s.USN=c.USN
+AND ss.SSID=c.SSID
+AND ss.SEM=4
+AND ss.SEC='C';
+
+QUERY 2
+
+SELECT ss.SEM,
+       ss.SEC,
+       s.GENDER,
+       COUNT(s.GENDER) AS COUNT
+FROM STUDENT s, SEMSEC ss, CLASS c
+WHERE s.USN=c.USN
+AND ss.SSID=c.SSID
+GROUP BY ss.SEM, ss.SEC, s.GENDER
+ORDER BY ss.SEM;
+
+
+QUERY 3
+CREATE VIEW TEST1_VIEW AS
+SELECT TEST1,SUBCODE
+FROM IAMARKS
+WHERE USN='1B24CS101';
+
+SELECT * FROM TEST1_VIEW;
+
+
+QUERY 4 
+create or replace procedure AVGMARKS is
+
+cursor c_iamarks is
+select greatest(TEST1,TEST2) as a,
+       greatest(TEST1,TEST3) as b,
+       greatest(TEST3,TEST2) as c
+from IAMARKS
+where FINALIA is null
+for update;
+
+c_a number;
+c_b number;
+c_c number;
+c_sm number;
+c_av number;
+
+begin
+
+open c_iamarks;
+
+loop
+
+fetch c_iamarks into c_a,c_b,c_c;
+
+exit when c_iamarks%notfound;
+
+if(c_a!=c_b) then
+    c_sm:=c_a+c_b;
+else
+    c_sm:=c_a+c_c;
+end if;
+
+c_av:=c_sm/2;
+
+update IAMARKS
+set FINALIA=c_av
+where current of c_iamarks;
+
+end loop;
+
+close c_iamarks;
+
+end;
+/
+
+
+
+QUERY 5 
+
+select s.Usn,
+       s.Sname,
+       s.Address,
+       s.Phone,
+       s.Gender,
+(
+case
+when ia.finalia between 17 and 20 then 'outstanding'
+when ia.finalia between 12 and 16 then 'average'
+else 'weak'
+end
+) as cat
+from STUDENT s,
+     SEMSEC ss,
+     IAMARKS ia,
+     COURSE sub
+where s.Usn=ia.Usn
+and ss.Ssid=ia.Ssid
+and sub.Subcode=ia.Subcode
+and sub.Sem=8;
+
+
+
+
+
+
+
+
+
