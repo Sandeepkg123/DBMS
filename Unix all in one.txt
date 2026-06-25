@@ -1,0 +1,219 @@
+7 a) Write a shell script which displays a list of all the files in the current directory to which you have read, write and execute permissions.
+
+
+clear
+
+for i in *
+do
+ if [ -r $i -a -w $i -a -x $i ]
+ then
+  echo File $i has read, write and execute permission
+ fi
+done
+
+7 b)Program 7(b)
+Question:
+
+Write a shell script which will accept a filename and starting and ending line numbers and displays these lines from given file
+
+clear
+
+echo -n "Enter the filename : "
+read fname
+
+echo -n "Enter the starting line number : "
+read st_num
+
+echo -n "Enter the ending line number : "
+read end_num
+
+total_lines=`expr $end_num - $st_num + 1`
+
+echo "Contents of the file $fname from line number $st_num to $end_num"
+
+tail +$st_num $fname | head -$total_lines
+
+7c)Write a shell script which is expected to accept two filenames as its arguments. Check the number of arguments and display the contents of the argument files if the arguments are two, otherwise display an error message and exit.
+
+clear
+
+if [ `expr $# % 2` -eq 0 ]
+then
+ echo Contents of file $1 is
+ nl $1
+
+ echo Press ENTER key to see contents of next file
+ read key
+
+ echo Contents of file $2 is
+ nl $2
+else
+ echo ERROR - Number of arguments is not two.
+fi
+
+8a)Write a shell program that will do the following tasks in order:
+
+Clear the screen
+Print the current directory
+Display current login users
+List of users
+List of processes
+List of files
+Today's date
+Quit to UNIX
+
+echo "The Unix commands menu : "
+
+echo 1 : Clear the screen
+echo 2 : Current working directory
+echo 3 : Active users on the system
+echo 4 : List of processes
+echo 5 : List of files
+echo 6 : Todays date
+echo 7 : Quit
+
+echo -n "Enter your choice : "
+read choice
+
+case $choice in
+1) clear ;;
+2) pwd ;;
+3) who ;;
+4) ps -ef ;;
+5) ls -l ;;
+6) date ;;
+7) exit ;;
+*) echo "Incorrect choice"
+esac
+
+
+8b)Write a shell script that reads data from a text file and appends the lines starting with an alphabet from 'a' through 'k' to a file named "ak", the lines from 'l' through 'r' to a file named "lr" and the lines from 's' through 'z' to a file named "sz". Then display the number of lines in each file individually.
+
+clear
+
+echo -n "Enter the filename : "
+read fname
+
+grep "^[a-k]" $fname > ak
+grep "^[l-r]" $fname > lr
+grep "^[s-z]" $fname > sz
+
+echo File ak has `cat ak | wc -l` lines
+echo File lr has `cat lr | wc -l` lines
+echo File sz has `cat sz | wc -l` lines
+
+8c
+Write a shell script which will receive login name during execution, obtain information about it from /etc/passwd and display this information on screen in easily understandable format
+clear
+
+echo -n "Enter the Login name whose information you need : "
+read login_name
+
+echo "Detailed information is as follows:"
+
+echo Username = `grep "^$login_name" /etc/passwd | cut -d":" -f1`
+echo Password = `grep "^$login_name" /etc/passwd | cut -d":" -f2`
+echo UID = `grep "^$login_name" /etc/passwd | cut -d":" -f3`
+echo GID = `grep "^$login_name" /etc/passwd | cut -d":" -f4`
+echo User_ID_Info = `grep "^$login_name" /etc/passwd | cut -d":" -f5`
+echo Home_Directory = `grep "^$login_name" /etc/passwd | cut -d":" -f6`
+echo Login_Shell = `grep "^$login_name" /etc/passwd | cut -d":" -f7`
+
+
+9a)A shell script receives even number of filenames as arguments. Suppose four files are supplied as arguments then the first file should get copied into second, third file into fourth and so on. If odd number of filenames is supplied then no copying should take place and an error message should be displayed
+
+clear
+
+for i in $*
+do
+ if [ `expr $# % 2` -eq 0 ]
+ then
+  cp $1 $2
+  shift 2
+ else
+  echo ERROR - ODD NUMBER OF ARGUMENTS ARE PASSED
+ fi
+done
+
+
+9b)Write a shell script which will receive any number of filenames as arguments. The shell script should check whether every argument supplied is a file or a directory. If it is a directory it should be appropriately reported. If it is a filename then name of the file as well as the number of lines present in it should be reported.
+
+clear
+
+for i in $*
+do
+ if [ -d $i ]
+ then
+  echo File $i is a directory file
+ else
+  echo File $i is an ordinary file and it contains `cat $i | wc -l` lines
+ fi
+done
+
+
+10a)Write a shell script which expects two parameters, a file name and a number. The script deletes the line with given number from given file.
+
+clear
+
+echo "Given file name is $1"
+
+echo "Original contents of file $1 is as follows"
+nl $1
+
+echo
+echo "Removing line number $2"
+
+line_number=$2
+
+sed -i "${line_number}d" $1
+
+echo "Now the contents of file $1 is as follows"
+nl $1
+
+10 b)Write a shell script which accepts any number of arguments and prints them in reverse order
+
+clear
+
+if [ $# -eq 0 ]
+then
+ echo NO ARGUMENTS ENTERED
+ exit
+fi
+
+echo Total number of arguments is $#
+echo Arguments are $*
+
+reverse=" "
+
+for i in $*
+do
+ reverse=$i" "$reverse
+done
+
+echo $reverse
+
+10 c)Write script average which computes the average value of the numeric values given in the parameters and writes the result to standard output.
+
+clear
+
+sum=0
+count=$#
+
+if [ $count -lt 1 ]
+then
+ echo NO ARGUMENTS ENTERED
+ exit
+fi
+
+for i in $*
+do
+ sum=`expr $sum + $1`
+ shift
+done
+
+average=$(echo "scale=2; $sum / $count" | bc)
+
+echo Average of given $count numbers is $average
+
+
+
